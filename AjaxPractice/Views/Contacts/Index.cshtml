@@ -1,0 +1,351 @@
+﻿@model IEnumerable<Contact>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createModal">
+    @RLang.Create
+</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.FirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.LastName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Organisation)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Phone)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Email)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody id="contactlist">
+        @Html.Partial("~/Views/Contacts/Partial/_PartialList.cshtml", Model)
+    </tbody>
+
+</table>
+
+@section script{
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>
+
+    <script>
+        $('#createModal').on('shown.bs.modal', function () {
+            //form icindeki inputlari temizleyir modal acilanda,kohne melumatlar qalmasin deye
+            $('#createModal input:not([type="button,hidden"])').val('');
+            //form icindeki butun validate messageleri temizleyir
+            $('span[data-valmsg-for]').text('');
+        });
+
+        function displayValidationErrors(errors) {
+            $.each(errors, function (idx, validationError) {
+                $("span[data-valmsg-for='" + validationError.PropertyName + "']").text(validationError.ErrorList[0]);
+            });
+        }
+
+        function OnEdit(id) {
+
+            $.ajax({
+                url: '@Url.Action("Edit","Contacts")/' + id,
+                type: 'GET',
+                success: function (response) {
+                    $('#editcontainer').html(response);
+                    $('#exampleModal').modal('show');
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+        }
+
+        function OnDetails(id) {
+
+            $.ajax({
+                url: '@Url.Action("Edit","Contacts")/' + id,
+                type: 'GET',
+                success: function (response) {
+                    $('#detailscontainer').html(response);
+                    $('#detailsModal input:not([type="button,hidden"])').attr('readonly','');
+                    $('#detailsModal').modal('show');
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+        }
+
+        function OnDelete(id) {
+
+            $.ajax({
+                url: '@Url.Action("Delete","Contacts")/' + id,
+                type: 'GET',
+                success: function (response) {
+                    $('#deletecontainer').html(response);
+                    $('#deleteModal').modal('show');
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+
+
+        }
+
+        $('#exampleModal').submit(function (e) {
+            e.preventDefault();
+
+            var _data = $('#exampleModal').serialize();
+            console.log(_data);
+            $.ajax({
+                url: '@Url.Action("Edit","Contacts")',
+                type: 'POST',
+                data: _data,
+                success: function (response) {
+
+                    if (typeof response === 'object' && response.errors) {
+                        displayValidationErrors(response.errorList);
+                        return;
+                    }
+
+                    $('#contactlist').html(response);
+                    $('#exampleModal').modal('hide');
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+        });
+
+
+        $('#createModal').submit(function (e) {
+            e.preventDefault();
+
+            var _data = $('#createModal').serialize();
+            console.log(_data);
+            $.ajax({
+                url: '@Url.Action("Create","Contacts")',
+                type: 'POST',
+                data: _data,
+                success: function (response) {
+
+                    if (typeof response === 'object' && response.errors) {
+                        displayValidationErrors(response.errorList);
+                        return;
+                    }
+
+                    $('#contactlist').html(response);
+                    $('#createModal').modal('hide');
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+        });
+
+         $('#deleteModal').submit(function (e) {
+            e.preventDefault();
+
+            var _data = $('#deleteModal').serialize();
+            console.log(_data);
+            $.ajax({
+                url: '@Url.Action("Delete","Contacts")',
+                type: 'POST',
+                data: _data,
+                success: function (response) {
+
+                    if (typeof response === 'object' && response.errors) {
+                        displayValidationErrors(response.errorList);
+                        return;
+                    }
+
+                    $('#contactlist').html(response);
+                    $('#deleteModal').modal('hide');
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+        });
+
+    </script>
+
+}
+
+@*For Edit*@
+@using (Html.BeginForm("Edit", "Contacts", method: FormMethod.Post
+    , htmlAttributes: new
+    {
+        @class = "modal fade",
+        id = "exampleModal",
+        tabindex = "-1",
+        role = "dialog",
+        aria_labelledby = "exampleModalLabel",
+        aria_hidden = "true",
+        novalidate = ""
+    }))
+{
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@RLang.Edit</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="editcontainer"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@RLang.Cancel</button>
+                <button type="submit" class="btn btn-primary">@RLang.Save</button>
+            </div>
+        </div>
+    </div>
+}
+
+@*For Create*@
+@using (Html.BeginForm("Create", "Contacts", method: FormMethod.Post
+    , htmlAttributes: new
+    {
+        @class = "modal fade",
+        id = "createModal",
+        tabindex = "-1",
+        role = "dialog",
+        aria_labelledby = "createModalLabel",
+        aria_hidden = "true",
+        novalidate = ""
+    }))
+{
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@RLang.Create</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @Html.AntiForgeryToken()
+
+                <div class="form-horizontal">
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                    <div class="form-group row">
+                        @Html.Label("FirstName", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("FirstName", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("FirstName", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.Label("LastName", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("LastName", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("LastName", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.Label("Organisation", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("Organisation", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("Organisation", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.Label("Phone", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("Phone", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("Phone", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.Label("Email", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("Email", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("Email", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@RLang.Cancel</button>
+                <button type="submit" class="btn btn-primary">@RLang.Save</button>
+            </div>
+        </div>
+    </div>
+}
+
+@*For Details*@
+@using (Html.BeginForm("Edit", "Contacts", method: FormMethod.Post
+    , htmlAttributes: new
+    {
+        @class = "modal fade",
+        id = "detailsModal",
+        tabindex = "-1",
+        role = "dialog",
+        aria_labelledby = "detailsModalLabel",
+        aria_hidden = "true",
+        novalidate = ""
+    }))
+{
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@RLang.Edit</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailscontainer"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@RLang.Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+
+@*For Delete*@
+@using (Html.BeginForm("Delete", "Contacts", method: FormMethod.Post
+    , htmlAttributes: new
+    {
+        @class = "modal fade",
+        id = "deleteModal",
+        tabindex = "-1",
+        role = "dialog",
+        aria_labelledby = "createModalLabel",
+        aria_hidden = "true",
+        novalidate = ""
+    }))
+{
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header btn-danger">
+                <h5 class="modal-title" id="exampleModalLabel">@RLang.Question</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="deletecontainer"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@RLang.Cancel</button>
+                <button type="submit" class="btn btn-danger">@RLang.Delete</button>
+            </div>
+        </div>
+    </div>
+}
+

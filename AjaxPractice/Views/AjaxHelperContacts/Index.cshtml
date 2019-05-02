@@ -1,0 +1,176 @@
+﻿@model IEnumerable<AjaxPractice.Models.Entity.Contact>
+
+@{
+    ViewBag.Title = "Index";
+}
+<style>
+    .loader {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1051;
+    }
+
+        .loader > img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+        }
+</style>
+<h2>Index</h2>
+
+<p>
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+        @RLang.Create
+    </button>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.FirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.LastName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Organisation)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Phone)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Email)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody id="dynamiccontainer">
+        @{ Html.RenderPartial(@"~/Views/AjaxHelperContacts/Partial/_ContactPartial.cshtml", Model);}
+    </tbody>
+
+</table>
+
+<!-- Modal -->
+@using (Ajax.BeginForm("Create", "AjaxHelperContacts",
+    new AjaxOptions
+    {
+        HttpMethod = "POST",
+        LoadingElementId = "loader",
+        OnSuccess = "OnSccess"
+    },
+    htmlAttributes: new
+    {
+        @class = "modal fade",
+        id = "exampleModal",
+        tabindex = "-1",
+        role = "dialog",
+        aria_labelledby = "exampleModalLabel",
+        aria_hidden = "true"
+    }))
+{
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Contact*</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                @Html.AntiForgeryToken()
+
+                <div class="form-horizontal">
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                    <div class="form-group row">
+                        @Html.Label("FirstName", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("FirstName", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("FirstName", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.Label("LastName", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("LastName", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("LastName", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.Label("Organisation", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("Organisation", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("Organisation", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.Label("Phone", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("Phone", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("Phone", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.Label("Email", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.Editor("Email", new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessage("Email", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                </div>
+                @*@Html.HttpMethodOverride(HttpVerbs.Delete)*@
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@RLang.Cancel</button>
+                <button type="submit" class="btn btn-primary">@RLang.Save</button>
+            </div>
+        </div>
+    </div>
+}
+
+<div id="loader" class="modal-backdrop fade in loader" style="display:none">
+    <img src="~/fonts/loader.gif" />
+</div>
+
+@section script{
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>
+
+    <script>
+
+        $('#exampleModal').on('shown.bs.modal', function () {
+            $('#exampleModal input:not([type="button,hidden"])').val('');
+        });
+
+        function OnSccess(e) {
+            if (typeof e === 'object' && e.errors) {
+                displayValidationErrors(e.errorList);
+                return;
+            }
+            else if (typeof e !== 'object') {
+                $("#dynamiccontainer").html(e);
+            }
+
+            $('#exampleModal').modal('hide');
+        }
+
+        function displayValidationErrors(errors) {
+            $.each(errors, function (idx, validationError) {
+
+                $("span[data-valmsg-for='" + validationError.PropertyName + "']").text(validationError.ErrorList[0]);
+
+            });
+        }
+    </script>
+}

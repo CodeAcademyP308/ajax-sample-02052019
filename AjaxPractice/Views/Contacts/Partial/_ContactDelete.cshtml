@@ -1,0 +1,7 @@
+﻿
+@model Contact
+
+
+@Html.AntiForgeryToken()
+@Html.HiddenFor(model => model.Id)
+<b>@(Model.FirstName + " " + Model.LastName)</b>*-@RLang.DeleteQuestion
